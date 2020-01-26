@@ -1,0 +1,14 @@
+[package]
+name = "iceray"
+version = "0.0.1"
+authors = ["Mathias »Bob« Kraus <k.hias@gmx.de>"]
+edition = "2018"
+license = "Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+iceoryx-rs = { version = "0.0.3", git = "https://github.com/elBoberido/iceoryx-rs.git"}
+termion = "1.5"
+tui = { version = "0.8", default-features = false, features = ["termion"] }
+structopt = "0.3"
