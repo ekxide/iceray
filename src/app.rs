@@ -4,7 +4,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0>. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use iceoryx_rs::introspection::MemPoolIntrospectionTopic;
+use iceoryx_rs::introspection::{MemPoolIntrospectionTopic, ProcessIntrospectionTopic};
 use iceoryx_rs::sb::st::{Sample, SampleReceiver};
 
 use termion::event::{Key, MouseEvent};
@@ -45,9 +45,13 @@ pub struct MemorySegments {
 }
 
 impl MemorySegments {
-    pub fn new(sample_receiver: SampleReceiver<MemPoolIntrospectionTopic>) -> Self {
+    pub fn new() -> Self {
+        let topic = MemPoolIntrospectionTopic::new();
+        const CACHE_SIZE: u32 = 101;
+        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
+
         Self {
-            sample_receiver,
+            sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
             segments: VecDeque::new(),
             used_chunks_history: HashMap::with_capacity(USED_CHUNKS_HISTORY_SIZE),
             selection: (0, 0),
@@ -119,6 +123,95 @@ impl MemorySegments {
     }
 }
 
+pub struct ProcessList {
+    sample_receiver: SampleReceiver<ProcessIntrospectionTopic>,
+    pub list: Option<Sample<ProcessIntrospectionTopic>>,
+    pub selection: (usize, String),
+}
+
+impl ProcessList {
+    pub fn new() -> Self {
+        let topic = ProcessIntrospectionTopic::new();
+        const CACHE_SIZE: u32 = 1;
+        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
+
+        Self {
+            sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
+            list: None,
+            selection: (0, "".to_string()),
+        }
+    }
+
+    pub fn update(&mut self) {
+        if let Some(list) = self.sample_receiver.get_sample() {
+            // check if selection index needs an update because the list changed
+            let mut found = list.get_process(self.selection.0).map_or(false, |process| {
+                process
+                    .name()
+                    .map_or(false, |name| name == self.selection.1)
+            });
+
+            // brute force if not found
+            if !found {
+                let process_count = list.process_count();
+                for index in 0..process_count {
+                    if let Some(process) = list.get_process(index) {
+                        if process
+                            .name()
+                            .map_or(false, |name| name == self.selection.1)
+                        {
+                            self.selection.0 = index;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // set the new list, since set_selection needs to access the new list if the process selection was outdated
+            self.list = Some(list);
+            // if still not found, select a new process
+            if !found {
+                self.set_selection(self.selection.0);
+            }
+        }
+    }
+
+    fn set_selection(&mut self, index: usize) {
+        if let Some(list) = self.list.as_ref() {
+            let process_count = list.process_count();
+            self.selection.0 = index;
+            // check if out of bounds
+            if self.selection.0 >= process_count {
+                self.selection.0 = if process_count > 0 {
+                    process_count - 1
+                } else {
+                    0
+                };
+            }
+            if let Some(name) = list
+                .get_process(self.selection.0)
+                .and_then(|process| process.name())
+            {
+                self.selection.1 = name;
+            } else {
+                // this should actually never happen
+                self.selection.1 = "##error##".to_string();
+            }
+        }
+    }
+
+    fn selection_next(&mut self) {
+        self.set_selection(self.selection.0 + 1);
+    }
+
+    fn selection_previous(&mut self) {
+        if self.selection.0 > 0 {
+            self.set_selection(self.selection.0 - 1);
+        }
+    }
+}
+
 pub struct App<'a> {
     pub title: &'a str,
     pub should_quit: bool,
@@ -126,20 +219,19 @@ pub struct App<'a> {
     pub tabs: TabsState<'a>,
 
     pub memory: MemorySegments,
+    pub processes: ProcessList,
 }
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str) -> Self {
-        let topic = MemPoolIntrospectionTopic::new();
-        const CACHE_SIZE: u32 = 101;
-        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
         App {
             title,
             should_quit: false,
             mouse_hold_position: None,
             tabs: TabsState::new(vec!["Overview", "Memory", "Processes", "Ports"]),
 
-            memory: MemorySegments::new(subscriber.get_sample_receiver(sample_receive_token)),
+            memory: MemorySegments::new(),
+            processes: ProcessList::new(),
         }
     }
 
@@ -154,12 +246,16 @@ impl<'a> App<'a> {
             Key::Left => {
                 self.tabs.previous();
             }
-            Key::Up => {
-                self.memory.selection_previous();
-            }
-            Key::Down => {
-                self.memory.selection_next();
-            }
+            Key::Up => match self.tabs.index {
+                1 => self.memory.selection_previous(),
+                2 => self.processes.selection_previous(),
+                _ => (),
+            },
+            Key::Down => match self.tabs.index {
+                1 => self.memory.selection_next(),
+                2 => self.processes.selection_next(),
+                _ => (),
+            },
             _ => {}
         }
     }
@@ -174,5 +270,6 @@ impl<'a> App<'a> {
 
     pub fn on_tick(&mut self) {
         self.memory.update();
+        self.processes.update();
     }
 }

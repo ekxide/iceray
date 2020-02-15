@@ -5,6 +5,7 @@
 // copied, modified, or distributed except according to those terms.
 
 mod memory;
+mod process;
 
 use crate::App;
 
@@ -64,18 +65,7 @@ where
                 .render(frame, area)
         }
         1 => memory::draw(frame, area, app),
-        2 => {
-            let text = [Text::raw("unimplemented!".to_string())];
-            Paragraph::new(text.iter())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Processes")
-                        .title_style(Style::default()),
-                )
-                .wrap(false)
-                .render(frame, area)
-        }
+        2 => process::draw(frame, area, app),
         3 => {
             let text = [Text::raw("unimplemented!".to_string())];
             Paragraph::new(text.iter())
