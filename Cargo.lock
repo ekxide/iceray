@@ -151,7 +151,8 @@ dependencies = [
 
 [[package]]
 name = "iceoryx-rs"
-version = "0.0.4"
+version = "0.0.5"
+source = "git+https://github.com/elBoberido/iceoryx-rs.git#77bfe40c1b75e19e508556235d2a365743842fc0"
 dependencies = [
  "cpp",
  "cpp_build",
@@ -159,7 +160,7 @@ dependencies = [
 
 [[package]]
 name = "iceray"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "iceoryx-rs",
  "structopt",

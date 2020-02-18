@@ -4,11 +4,15 @@
 // http://www.apache.org/licenses/LICENSE-2.0>. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use iceoryx_rs::introspection::{MemPoolIntrospectionTopic, ProcessIntrospectionTopic};
+use iceoryx_rs::introspection::{
+    MemPoolIntrospectionTopic, PortIntrospectionTopic, ProcessIntrospectionTopic,
+    ServiceDescription,
+};
 use iceoryx_rs::sb::st::{Sample, SampleReceiver};
 
 use termion::event::{Key, MouseEvent};
 
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
@@ -123,9 +127,17 @@ impl MemorySegments {
     }
 }
 
+pub struct ProcessDetails {
+    pub pid: i32,
+    pub sender_ports: Vec<ServiceDescription>,
+    pub receiver_ports: Vec<ServiceDescription>,
+    pub runnables: Vec<String>,
+}
+
 pub struct ProcessList {
     sample_receiver: SampleReceiver<ProcessIntrospectionTopic>,
-    pub list: Option<Sample<ProcessIntrospectionTopic>>,
+    pub list: Option<Sample<ProcessIntrospectionTopic>>, //TODO use HashMap
+    pub map: BTreeMap<String, ProcessDetails>,
     pub selection: (usize, String),
 }
 
@@ -138,66 +150,186 @@ impl ProcessList {
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
             list: None,
+            map: BTreeMap::new(),
             selection: (0, "".to_string()),
         }
     }
 
     pub fn update(&mut self) {
         if let Some(list) = self.sample_receiver.get_sample() {
-            // check if selection index needs an update because the list changed
-            let mut found = list.get_process(self.selection.0).map_or(false, |process| {
-                process
-                    .name()
-                    .map_or(false, |name| name == self.selection.1)
+            self.map.clear();
+
+            list.processes().into_iter().for_each(|process| {
+                if let Some(process_name) = process.name() {
+                    let details = self.map.entry(process_name).or_insert(ProcessDetails {
+                        pid: process.pid(),
+                        sender_ports: Vec::new(),
+                        receiver_ports: Vec::new(),
+                        runnables: Vec::new(),
+                    });
+                    // details.runnables.push(runnable);
+                }
             });
 
-            // brute force if not found
-            if !found {
-                let process_count = list.process_count();
-                for index in 0..process_count {
-                    if let Some(process) = list.get_process(index) {
-                        if process
-                            .name()
-                            .map_or(false, |name| name == self.selection.1)
-                        {
-                            self.selection.0 = index;
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            // check if selection is still at the right position
+            let found = self
+                .map
+                .keys()
+                .nth(self.selection.0)
+                .map_or(false, |key| *key == self.selection.1);
 
-            // set the new list, since set_selection needs to access the new list if the process selection was outdated
-            self.list = Some(list);
-            // if still not found, select a new process
             if !found {
-                self.set_selection(self.selection.0);
+                if let Some((index, key)) = self
+                    .map
+                    .keys()
+                    .enumerate()
+                    .find(|(_, key)| **key == self.selection.1)
+                {
+                    self.selection.0 = index;
+                    self.selection.1 = key.clone();
+                } else {
+                    self.set_selection(self.selection.0);
+                }
             }
         }
     }
 
     fn set_selection(&mut self, index: usize) {
-        if let Some(list) = self.list.as_ref() {
-            let process_count = list.process_count();
-            self.selection.0 = index;
-            // check if out of bounds
-            if self.selection.0 >= process_count {
-                self.selection.0 = if process_count > 0 {
-                    process_count - 1
-                } else {
-                    0
-                };
-            }
-            if let Some(name) = list
-                .get_process(self.selection.0)
-                .and_then(|process| process.name())
-            {
-                self.selection.1 = name;
+        // check if out of bounds
+        let mut index = index;
+        let service_count = self.map.len();
+        if index >= service_count {
+            index = if service_count > 0 {
+                service_count - 1
             } else {
-                // this should actually never happen
-                self.selection.1 = "##error##".to_string();
+                0
+            };
+        }
+
+        if let Some(key) = self.map.keys().nth(index) {
+            self.selection.0 = index;
+            self.selection.1 = key.clone();
+        }
+    }
+
+    fn selection_next(&mut self) {
+        self.set_selection(self.selection.0 + 1);
+    }
+
+    fn selection_previous(&mut self) {
+        if self.selection.0 > 0 {
+            self.set_selection(self.selection.0 - 1);
+        }
+    }
+}
+
+pub struct ServiceDetails {
+    pub sender_processes: Vec<String>,
+    pub receiver_processes: Vec<String>,
+}
+
+pub struct ServiceList {
+    sample_receiver: SampleReceiver<PortIntrospectionTopic>,
+    pub map: BTreeMap<ServiceDescription, ServiceDetails>,
+    pub selection: (usize, ServiceDescription),
+}
+
+impl ServiceList {
+    pub fn new() -> Self {
+        let topic = PortIntrospectionTopic::new();
+        const CACHE_SIZE: u32 = 1;
+        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
+
+        Self {
+            sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
+            map: BTreeMap::new(),
+            selection: (0, ServiceDescription::default()),
+        }
+    }
+
+    pub fn update(&mut self, processes: &mut ProcessList) {
+        if let Some(ports) = self.sample_receiver.get_sample() {
+            self.map.clear();
+            for (_, process_details) in processes.map.iter_mut() {
+                process_details.sender_ports.clear();
+                process_details.receiver_ports.clear();
+                process_details.runnables.clear();
             }
+
+            ports.sender_ports().into_iter().for_each(|sender| {
+                if let Some(service_description) = sender.service_description() {
+                    let details = self
+                        .map
+                        .entry(service_description.clone())
+                        .or_insert(ServiceDetails {
+                            sender_processes: Vec::new(),
+                            receiver_processes: Vec::new(),
+                        });
+                    if let Some(process_name) = sender.process_name() {
+                        if let Some(process_details) = processes.map.get_mut(&process_name).as_mut() {
+                            process_details.sender_ports.push(service_description);
+                        }
+                        details.sender_processes.push(process_name);
+                    }
+                }
+            });
+
+            ports.receiver_ports().into_iter().for_each(|receiver| {
+                if let Some(service_description) = receiver.service_description() {
+                    let details = self
+                        .map
+                        .entry(service_description.clone())
+                        .or_insert(ServiceDetails {
+                            sender_processes: Vec::new(),
+                            receiver_processes: Vec::new(),
+                        });
+                    if let Some(process_name) = receiver.process_name() {
+                        if let Some(process_details) = processes.map.get_mut(&process_name).as_mut() {
+                            process_details.receiver_ports.push(service_description);
+                        }
+                        details.receiver_processes.push(process_name);
+                    }
+                }
+            });
+
+            // check if selection is still at the right position
+            let found = self
+                .map
+                .keys()
+                .nth(self.selection.0)
+                .map_or(false, |key| *key == self.selection.1);
+
+            if !found {
+                if let Some((index, key)) = self
+                    .map
+                    .keys()
+                    .enumerate()
+                    .find(|(_, key)| **key == self.selection.1)
+                {
+                    self.selection.0 = index;
+                    self.selection.1 = key.clone();
+                } else {
+                    self.set_selection(self.selection.0);
+                }
+            }
+        }
+    }
+
+    fn set_selection(&mut self, index: usize) {
+        // check if out of bounds
+        let mut index = index;
+        let service_count = self.map.len();
+        if index >= service_count {
+            index = if service_count > 0 {
+                service_count - 1
+            } else {
+                0
+            };
+        }
+
+        if let Some(key) = self.map.keys().nth(index) {
+            self.selection.0 = index;
+            self.selection.1 = key.clone();
         }
     }
 
@@ -220,6 +352,7 @@ pub struct App<'a> {
 
     pub memory: MemorySegments,
     pub processes: ProcessList,
+    pub services: ServiceList,
 }
 
 impl<'a> App<'a> {
@@ -228,10 +361,11 @@ impl<'a> App<'a> {
             title,
             should_quit: false,
             mouse_hold_position: None,
-            tabs: TabsState::new(vec!["Overview", "Memory", "Processes", "Ports"]),
+            tabs: TabsState::new(vec!["Overview", "Memory", "Processes", "Services"]),
 
             memory: MemorySegments::new(),
             processes: ProcessList::new(),
+            services: ServiceList::new(),
         }
     }
 
@@ -249,11 +383,13 @@ impl<'a> App<'a> {
             Key::Up => match self.tabs.index {
                 1 => self.memory.selection_previous(),
                 2 => self.processes.selection_previous(),
+                3 => self.services.selection_previous(),
                 _ => (),
             },
             Key::Down => match self.tabs.index {
                 1 => self.memory.selection_next(),
                 2 => self.processes.selection_next(),
+                3 => self.services.selection_next(),
                 _ => (),
             },
             _ => {}
@@ -271,5 +407,6 @@ impl<'a> App<'a> {
     pub fn on_tick(&mut self) {
         self.memory.update();
         self.processes.update();
+        self.services.update(&mut self.processes);
     }
 }

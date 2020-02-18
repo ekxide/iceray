@@ -6,6 +6,7 @@
 
 mod memory;
 mod process;
+mod service;
 
 use crate::App;
 
@@ -66,18 +67,7 @@ where
         }
         1 => memory::draw(frame, area, app),
         2 => process::draw(frame, area, app),
-        3 => {
-            let text = [Text::raw("unimplemented!".to_string())];
-            Paragraph::new(text.iter())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Port")
-                        .title_style(Style::default()),
-                )
-                .wrap(false)
-                .render(frame, area)
-        }
+        3 => service::draw(frame, area, app),
         _ => {}
     }
 }

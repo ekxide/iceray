@@ -34,7 +34,7 @@ where
     text.push(Text::raw("\n"));
 
     text.push(Text::styled(
-        "   PID | # Sender | # Receiver | # Runnables | Process Name\n",
+        "   PID | Sender | Receiver | Runnables | Process Name\n",
         Style::default().modifier(Modifier::BOLD),
     ));
 
@@ -42,29 +42,27 @@ where
         " ----------------------------------------------------------\n",
     ));
 
-    if let Some(list) = app.processes.list.as_ref() {
-        list.processes()
-            .into_iter()
-            .enumerate()
-            .for_each(|(index, process)| {
-                let style = if app.processes.selection.0 == index {
-                    Style::default().fg(Color::Yellow)
-                } else {
-                    Style::default()
-                };
+    for (index, (process_name, details)) in app.processes.map.iter().enumerate() {
+        let style = if app.processes.selection.0 == index {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        };
 
-                text.push(Text::styled(format!(" {:>5} | ", process.pid()), style));
-                text.push(Text::styled(format!("{:>8} | ", "?"), style));
-                text.push(Text::styled(format!("{:>10} | ", "?"), style));
-                text.push(Text::styled(
-                    format!("{:>11} | ", process.runnable_count()),
-                    style,
-                ));
-                text.push(Text::styled(
-                    format!("{}\n", process.name().unwrap_or("## error ##".to_string())),
-                    style,
-                ));
-            })
+        text.push(Text::styled(format!(" {:>5} | ", details.pid), style));
+        text.push(Text::styled(
+            format!("{:>6} | ", details.sender_ports.len()),
+            style,
+        ));
+        text.push(Text::styled(
+            format!("{:>8} | ", details.receiver_ports.len()),
+            style,
+        ));
+        text.push(Text::styled(
+            format!("{:>9} | ", details.runnables.len()),
+            style,
+        ));
+        text.push(Text::styled(format!("{}\n", process_name), style));
     }
 
     Paragraph::new(text.iter())
@@ -86,57 +84,56 @@ where
 
     text.push(Text::raw("\n"));
 
-    if let Some(process) = app
-        .processes
-        .list
-        .as_ref()
-        .and_then(|list| list.get_process(app.processes.selection.0))
-    {
+    let process_name = &app.processes.selection.1;
+    if let Some(details) = app.processes.map.get(process_name) {
+        //     if let Some(process) = app
+        //         .processes
+        //         .list
+        //         .as_ref()
+        //         .and_then(|list| list.get_process(app.processes.selection.0))
+        //     {
         text.push(Text::styled(
             " Name: ",
             Style::default().modifier(Modifier::BOLD),
         ));
-        text.push(Text::raw(format!(
-            "{}\n",
-            process.name().unwrap_or("## error ##".to_string())
-        )));
+        text.push(Text::raw(format!("{}\n", process_name)));
 
         text.push(Text::styled(
             " PID: ",
             Style::default().modifier(Modifier::BOLD),
         ));
-        text.push(Text::raw(format!("{:}\n", process.pid())));
+        text.push(Text::raw(format!("{:}\n", details.pid)));
 
         text.push(Text::styled(
             " Sender Ports: ",
             Style::default().modifier(Modifier::BOLD),
         ));
-        text.push(Text::raw(format!("{:}\n", "not yet implemented")));
-        text.push(Text::raw(" • here\n"));
-        text.push(Text::raw(" • comes\n"));
-        text.push(Text::raw(" • a\n"));
-        text.push(Text::raw(" • list\n"));
-        text.push(Text::raw(" • of\n"));
-        text.push(Text::raw(" • ports\n"));
+        text.push(Text::raw(format!("{:}\n", details.sender_ports.len())));
+        for port in details.sender_ports.iter() {
+            text.push(Text::raw(format!(
+                " • {} • {} • {}\n",
+                port.service_id, port.instance_id, port.event_id
+            )));
+        }
 
         text.push(Text::styled(
             " Receiver Ports: ",
             Style::default().modifier(Modifier::BOLD),
         ));
-        text.push(Text::raw(format!("{:}\n", "not yet implemented")));
-        text.push(Text::raw(" • here\n"));
-        text.push(Text::raw(" • comes\n"));
-        text.push(Text::raw(" • a\n"));
-        text.push(Text::raw(" • list\n"));
-        text.push(Text::raw(" • of\n"));
-        text.push(Text::raw(" • ports\n"));
+        text.push(Text::raw(format!("{:}\n", details.receiver_ports.len())));
+        for port in details.receiver_ports.iter() {
+            text.push(Text::raw(format!(
+                " • {} • {} • {}\n",
+                port.service_id, port.instance_id, port.event_id
+            )));
+        }
 
         text.push(Text::styled(
             " Runnables: ",
             Style::default().modifier(Modifier::BOLD),
         ));
-        text.push(Text::raw(format!("{:}\n", process.runnable_count())));
-        if process.runnable_count() >= 1 {
+        text.push(Text::raw(format!("{:}\n", details.runnables.len())));
+        if details.runnables.len() >= 1 {
             text.push(Text::styled(
                 "     Listing runnables needs implementation!",
                 Style::default().fg(Color::Red),

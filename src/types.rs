@@ -11,7 +11,7 @@ pub enum Pages {
     Overview,
     Memory,
     Processes,
-    Ports,
+    Services,
 }
 
 impl FromStr for Pages {
@@ -22,7 +22,7 @@ impl FromStr for Pages {
             "Overview" => Ok(Pages::Overview),
             "Memory" => Ok(Pages::Memory),
             "Processes" => Ok(Pages::Processes),
-            "Ports" => Ok(Pages::Ports),
+            "Services" => Ok(Pages::Services),
             _ => Err("Could not parse page type!".to_string()),
         }
     }
