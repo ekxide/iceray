@@ -151,8 +151,8 @@ dependencies = [
 
 [[package]]
 name = "iceoryx-rs"
-version = "0.0.5"
-source = "git+https://github.com/elBoberido/iceoryx-rs.git#77bfe40c1b75e19e508556235d2a365743842fc0"
+version = "0.0.6"
+source = "git+https://github.com/elBoberido/iceoryx-rs.git#0017f84b011180d5813ab1738c42bb25c2f56d8b"
 dependencies = [
  "cpp",
  "cpp_build",
