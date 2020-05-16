@@ -13,7 +13,7 @@ use crate::App;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Layout, Rect};
 use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, Paragraph, Tabs, Text, Widget};
+use tui::widgets::{Block, Borders, Paragraph, Tabs, Text};
 use tui::{Frame, Terminal};
 
 use std::io;
@@ -33,7 +33,7 @@ fn draw_tabbar<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    Tabs::default()
+    let tabs = Tabs::default()
         .block(
             Block::default()
                 .borders(Borders::ALL)
@@ -42,8 +42,9 @@ where
         .titles(&app.tabs.titles)
         .select(app.tabs.index)
         .style(Style::default())
-        .highlight_style(Style::default().fg(Color::Yellow))
-        .render(frame, area);
+        .highlight_style(Style::default().fg(Color::Yellow));
+
+    frame.render_widget(tabs, area);
 }
 
 fn draw_main_view<B>(frame: &mut Frame<B>, area: Rect, app: &App)
@@ -55,15 +56,16 @@ where
             let text = [Text::raw(
                 "unimplemented!\n\nuse arraw keys to navigate to the next page".to_string(),
             )];
-            Paragraph::new(text.iter())
+            let paragraph = Paragraph::new(text.iter())
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
                         .title("Overview")
                         .title_style(Style::default()),
                 )
-                .wrap(false)
-                .render(frame, area)
+                .wrap(false);
+
+            frame.render_widget(paragraph, area);
         }
         1 => memory::draw(frame, area, app),
         2 => process::draw(frame, area, app),

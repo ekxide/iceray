@@ -9,7 +9,7 @@ use crate::app::{App, USED_CHUNKS_HISTORY_SIZE};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, Borders, Paragraph, Text, Widget};
+use tui::widgets::{Block, Borders, Paragraph, Text};
 use tui::Frame;
 
 use tui::widgets::canvas::{Canvas, Line};
@@ -105,15 +105,17 @@ where
                 ));
             });
     });
-    Paragraph::new(text.iter())
+
+    let paragraph = Paragraph::new(text.iter())
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Segment & MemPool Info")
                 .title_style(Style::default()),
         )
-        .wrap(false)
-        .render(frame, area)
+        .wrap(false);
+
+    frame.render_widget(paragraph, area);
 }
 
 pub fn draw_graph<B>(frame: &mut Frame<B>, area: Rect, app: &App)
@@ -129,7 +131,7 @@ where
     let top = 101.0;
     let right = USED_CHUNKS_HISTORY_SIZE as f64;
 
-    Canvas::default()
+    let canvas = Canvas::default()
         .block(
             Block::default()
                 .title(&chart_title)
@@ -170,6 +172,7 @@ where
             ctx.print(left, bottom, "0%", Color::White);
         })
         .x_bounds([left, right])
-        .y_bounds([bottom, top])
-        .render(frame, area);
+        .y_bounds([bottom, top]);
+
+    frame.render_widget(canvas, area);
 }

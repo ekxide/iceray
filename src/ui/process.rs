@@ -9,7 +9,7 @@ use crate::app::App;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, Borders, Paragraph, Text, Widget};
+use tui::widgets::{Block, Borders, Paragraph, Text};
 use tui::Frame;
 
 pub fn draw<B>(frame: &mut Frame<B>, area: Rect, app: &App)
@@ -65,15 +65,16 @@ where
         text.push(Text::styled(format!("{}\n", process_name), style));
     }
 
-    Paragraph::new(text.iter())
+    let paragraph = Paragraph::new(text.iter())
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Process List")
                 .title_style(Style::default()),
         )
-        .wrap(false)
-        .render(frame, area)
+        .wrap(false);
+
+    frame.render_widget(paragraph, area);
 }
 
 pub fn draw_process_details<B>(frame: &mut Frame<B>, area: Rect, app: &App)
@@ -141,13 +142,14 @@ where
         }
     }
 
-    Paragraph::new(text.iter())
+    let paragraph = Paragraph::new(text.iter())
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Process Details")
                 .title_style(Style::default()),
         )
-        .wrap(true)
-        .render(frame, area)
+        .wrap(true);
+
+    frame.render_widget(paragraph, area);
 }

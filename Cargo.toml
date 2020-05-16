@@ -1,6 +1,6 @@
 [package]
 name = "iceray"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Mathias »Bob« Kraus <k.hias@gmx.de>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -10,5 +10,5 @@ license = "Apache-2.0"
 [dependencies]
 iceoryx-rs = { version = "0.0.7", git = "https://github.com/elBoberido/iceoryx-rs.git" }
 termion = "1.5"
-tui = { version = "0.8", default-features = false, features = ["termion"] }
+tui = { version = "0.9", default-features = false, features = ["termion"] }
 structopt = "0.3"
