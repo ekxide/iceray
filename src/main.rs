@@ -33,7 +33,7 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>> {
     let params = params::Params::from_args();
 
-    Runtime::get_intance("/iceray");
+    Runtime::get_instance("/iceray");
 
     let events = Events::new(Config {
         tick_rate: Duration::from_millis(params.update_interval),
