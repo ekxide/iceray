@@ -43,7 +43,7 @@ pub const USED_CHUNKS_HISTORY_SIZE: usize = 120;
 
 pub struct MemorySegments {
     sample_receiver: SampleReceiver<MemPoolIntrospectionTopic>,
-    pub segments: VecDeque<Sample<MemPoolIntrospectionTopic>>,
+    pub segments: Option<Sample<MemPoolIntrospectionTopic>>,
     pub used_chunks_history: HashMap<(u32, usize), VecDeque<f64>>,
     pub selection: (u32, usize),
 }
@@ -51,53 +51,60 @@ pub struct MemorySegments {
 impl MemorySegments {
     pub fn new() -> Self {
         let topic = MemPoolIntrospectionTopic::new();
-        const CACHE_SIZE: u32 = 101;
-        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
+        let (subscriber, sample_receive_token) = topic.subscribe();
 
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
-            segments: VecDeque::new(),
+            segments: None,
             used_chunks_history: HashMap::with_capacity(USED_CHUNKS_HISTORY_SIZE),
             selection: (0, 0),
         }
     }
 
     pub fn update(&mut self) {
-        while let Some(sample) = self.sample_receiver.get_sample() {
+        if let Some(sample) = self.sample_receiver.get_sample() {
             // update history
             sample
-                .mempools()
+                .memory_segments()
                 .into_iter()
-                .enumerate()
-                .for_each(|(index, mempool)| {
-                    let history = self
-                        .used_chunks_history
-                        .entry((sample.segment_id(), index))
-                        .or_insert(VecDeque::new());
+                .for_each(|memory_segment| {
+                    memory_segment.mempools().into_iter().enumerate().for_each(
+                        |(index, mempool)| {
+                            let history = self
+                                .used_chunks_history
+                                .entry((memory_segment.segment_id(), index))
+                                .or_insert(VecDeque::new());
 
-                    if history.len() >= USED_CHUNKS_HISTORY_SIZE {
-                        history.drain(0..1);
-                    }
+                            if history.len() >= USED_CHUNKS_HISTORY_SIZE {
+                                history.drain(0..1);
+                            }
 
-                    history.push_back(
-                        mempool.used_chunks as f64 / mempool.total_number_of_chunks as f64 * 100f64,
-                    );
+                            history.push_back(
+                                mempool.used_chunks as f64 / mempool.total_number_of_chunks as f64
+                                    * 100f64,
+                            );
+                        },
+                    )
                 });
 
-            // check if outdated segment is in the queue
-            if let Some(front) = self.segments.front() {
-                if front.segment_id() == sample.segment_id() {
-                    self.segments.drain(0..1);
-                }
-            }
-            self.segments.push_back(sample);
+            self.segments = Some(sample);
         }
     }
 
     fn selection_next(&mut self) {
+        let sample = if let Some(sample) = self.segments.as_ref() {
+            sample
+        } else {
+            return;
+        };
+
         let mut next_segment = self.selection.0;
         let mut next_mempool = self.selection.1 as usize + 1;
-        while let Some(segment) = self.segments.get(next_segment as usize) {
+        while let Some(segment) = sample
+            .memory_segments()
+            .into_iter()
+            .nth(next_segment as usize)
+        {
             let number_of_mempools = segment.mempools().into_iter().size_hint().0;
             if number_of_mempools > next_mempool {
                 self.selection = (next_segment, next_mempool);
@@ -118,7 +125,17 @@ impl MemorySegments {
             return;
         }
 
-        if let Some(segment) = self.segments.get(self.selection.0 as usize - 1) {
+        let sample = if let Some(sample) = self.segments.as_ref() {
+            sample
+        } else {
+            return;
+        };
+
+        if let Some(segment) = sample
+            .memory_segments()
+            .into_iter()
+            .nth(self.selection.0 as usize - 1)
+        {
             let number_of_mempools = segment.mempools().into_iter().size_hint().0;
             if number_of_mempools > 0 {
                 self.selection = (self.selection.0 - 1, number_of_mempools - 1);
@@ -144,8 +161,7 @@ pub struct ProcessList {
 impl ProcessList {
     pub fn new() -> Self {
         let topic = ProcessIntrospectionTopic::new();
-        const CACHE_SIZE: u32 = 1;
-        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
+        let (subscriber, sample_receive_token) = topic.subscribe();
 
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
@@ -237,8 +253,7 @@ pub struct ServiceList {
 impl ServiceList {
     pub fn new() -> Self {
         let topic = PortIntrospectionTopic::new();
-        const CACHE_SIZE: u32 = 1;
-        let (subscriber, sample_receive_token) = topic.subscribe(CACHE_SIZE);
+        let (subscriber, sample_receive_token) = topic.subscribe();
 
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
@@ -256,17 +271,18 @@ impl ServiceList {
                 process_details.runnables.clear();
             }
 
-            ports.sender_ports().into_iter().for_each(|sender| {
+            ports.publisher_ports().into_iter().for_each(|sender| {
                 if let Some(service_description) = sender.service_description() {
-                    let details = self
-                        .map
-                        .entry(service_description.clone())
-                        .or_insert(ServiceDetails {
-                            sender_processes: Vec::new(),
-                            receiver_processes: Vec::new(),
-                        });
+                    let details =
+                        self.map
+                            .entry(service_description.clone())
+                            .or_insert(ServiceDetails {
+                                sender_processes: Vec::new(),
+                                receiver_processes: Vec::new(),
+                            });
                     if let Some(process_name) = sender.process_name() {
-                        if let Some(process_details) = processes.map.get_mut(&process_name).as_mut() {
+                        if let Some(process_details) = processes.map.get_mut(&process_name).as_mut()
+                        {
                             process_details.sender_ports.push(service_description);
                         }
                         details.sender_processes.push(process_name);
@@ -274,17 +290,18 @@ impl ServiceList {
                 }
             });
 
-            ports.receiver_ports().into_iter().for_each(|receiver| {
+            ports.subscriber_ports().into_iter().for_each(|receiver| {
                 if let Some(service_description) = receiver.service_description() {
-                    let details = self
-                        .map
-                        .entry(service_description.clone())
-                        .or_insert(ServiceDetails {
-                            sender_processes: Vec::new(),
-                            receiver_processes: Vec::new(),
-                        });
+                    let details =
+                        self.map
+                            .entry(service_description.clone())
+                            .or_insert(ServiceDetails {
+                                sender_processes: Vec::new(),
+                                receiver_processes: Vec::new(),
+                            });
                     if let Some(process_name) = receiver.process_name() {
-                        if let Some(process_details) = processes.map.get_mut(&process_name).as_mut() {
+                        if let Some(process_details) = processes.map.get_mut(&process_name).as_mut()
+                        {
                             process_details.receiver_ports.push(service_description);
                         }
                         details.receiver_processes.push(process_name);

@@ -145,16 +145,17 @@ dependencies = [
 
 [[package]]
 name = "iceoryx-rs"
-version = "0.0.8"
-source = "git+https://github.com/elBoberido/iceoryx-rs.git#005d8f04276fdb4e837b82a88d0932916938d997"
+version = "0.0.9"
+source = "git+https://github.com/elBoberido/iceoryx-rs.git#a23be6cebea2baf252b155b00326f64ea12ce054"
 dependencies = [
  "cpp",
  "cpp_build",
+ "thiserror",
 ]
 
 [[package]]
 name = "iceray"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "iceoryx-rs",
  "structopt",
@@ -349,6 +350,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
  "unicode-width",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "318234ffa22e0920fe9a40d7b8369b5f649d490980cf7aadcf1eb91594869b42"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cae2447b6282786c3493999f40a9be2a6ad20cb8bd268b0a0dbf5a065535c0ab"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

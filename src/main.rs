@@ -33,7 +33,7 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>> {
     let params = params::Params::from_args();
 
-    Runtime::get_instance("/iceray");
+    Runtime::init("iceray");
 
     let events = Events::new(Config {
         tick_rate: Duration::from_millis(params.update_interval),
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
 
-    let mut app = App::new("IceRay - IceOryx Introspection");
+    let mut app = App::new("iceray - iceoryx Introspection");
     app.tabs.index = params.initial_page as usize;
     ui::draw(&mut terminal, &mut app)?;
 

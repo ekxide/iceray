@@ -33,7 +33,13 @@ where
 {
     let mut text = Vec::<Text>::new();
 
-    app.memory.segments.iter().for_each(|segment| {
+    let sample = if let Some(sample) = app.memory.segments.as_ref() {
+        sample
+    } else {
+        return;
+    };
+
+    (*sample).memory_segments().into_iter().for_each(|segment| {
         let segment_id = segment.segment_id();
         text.push(Text::raw("\n"));
         text.push(Text::styled(
