@@ -9,7 +9,8 @@ use crate::app::{App, USED_CHUNKS_HISTORY_SIZE};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, Borders, Paragraph, Text};
+use tui::text::{Span, Spans};
+use tui::widgets::{Block, Borders, Paragraph, Wrap};
 use tui::Frame;
 
 use tui::widgets::canvas::{Canvas, Line};
@@ -31,7 +32,7 @@ pub fn draw_mempool_segments<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    let mut text = Vec::<Text>::new();
+    let mut text = Vec::<Spans>::new();
 
     let sample = if let Some(sample) = app.memory.segments.as_ref() {
         sample
@@ -41,27 +42,29 @@ where
 
     (*sample).memory_segments().into_iter().for_each(|segment| {
         let segment_id = segment.segment_id();
-        text.push(Text::raw("\n"));
-        text.push(Text::styled(
-            format!("Segment {}", segment_id),
-            Style::default().modifier(Modifier::BOLD),
-        ));
-        text.push(Text::raw(format!(
-            " [writer: {} - reader: {}]\n",
-            segment.writer_group().unwrap_or("##Error##".to_string()),
-            segment.reader_group().unwrap_or("##Error##".to_string())
-        )));
+        text.push(Spans::from(vec![Span::raw("")]));
+        text.push(Spans::from(vec![
+            Span::styled(
+                format!("Segment {}", segment_id),
+                Style::default().add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(format!(
+                " [writer: {} - reader: {}]",
+                segment.writer_group().unwrap_or("##Error##".to_string()),
+                segment.reader_group().unwrap_or("##Error##".to_string())
+            )),
+        ]));
 
-        text.push(Text::raw("\n"));
+        text.push(Spans::from(vec![Span::raw("")]));
 
-        text.push(Text::styled(
-            "  MemPool | Chunks In Use |    Total | Min Free | Chunk Size | Payload Size\n",
-            Style::default().modifier(Modifier::BOLD),
-        ));
+        text.push(Spans::from(vec![Span::styled(
+            "  MemPool | Chunks In Use |    Total | Min Free | Chunk Size | Payload Size",
+            Style::default().add_modifier(Modifier::BOLD),
+        )]));
 
-        text.push(Text::raw(
-            "  -------------------------------------------------------------------------\n",
-        ));
+        text.push(Spans::from(vec![Span::raw(
+            "  -------------------------------------------------------------------------",
+        )]));
 
         segment
             .mempools()
@@ -89,37 +92,35 @@ where
                     Style::default().fg(Color::Red)
                 };
 
-                text.push(Text::styled(format!("  {:>7} | ", index,), style));
-                text.push(Text::styled(
-                    format!("{:>13}", mempool.used_chunks,),
-                    used_chunks_style,
-                ));
-                text.push(Text::styled(
-                    format!(" | {:>8} | ", mempool.total_number_of_chunks),
-                    style,
-                ));
-                text.push(Text::styled(
-                    format!("{:>8}", mempool.min_free_chunks),
-                    min_free_chunks_style,
-                ));
-                text.push(Text::styled(
-                    format!(
-                        " | {:>10} | {:>12}\n",
-                        mempool.chunk_size, mempool.payload_size
+                text.push(Spans::from(vec![
+                    Span::styled(format!("  {:>7} | ", index,), style),
+                    Span::styled(format!("{:>13}", mempool.used_chunks,), used_chunks_style),
+                    Span::styled(
+                        format!(" | {:>8} | ", mempool.total_number_of_chunks),
+                        style,
                     ),
-                    style,
-                ));
+                    Span::styled(
+                        format!("{:>8}", mempool.min_free_chunks),
+                        min_free_chunks_style,
+                    ),
+                    Span::styled(
+                        format!(
+                            " | {:>10} | {:>12}",
+                            mempool.chunk_size, mempool.payload_size
+                        ),
+                        style,
+                    ),
+                ]));
             });
     });
 
-    let paragraph = Paragraph::new(text.iter())
+    let paragraph = Paragraph::new(text)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Segment & MemPool Info")
-                .title_style(Style::default()),
+                .title("Segment & MemPool Info"),
         )
-        .wrap(false);
+        .wrap(Wrap { trim: false });
 
     frame.render_widget(paragraph, area);
 }
@@ -140,9 +141,8 @@ where
     let canvas = Canvas::default()
         .block(
             Block::default()
-                .title(&chart_title)
-                .title_style(Style::default())
-                .borders(Borders::ALL),
+                .borders(Borders::ALL)
+                .title(&chart_title as &str),
         )
         .paint(|ctx| {
             if area.width < 4 || area.height < 4 {

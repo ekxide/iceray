@@ -146,9 +146,9 @@ impl MemorySegments {
 
 pub struct ProcessDetails {
     pub pid: i32,
-    pub sender_ports: Vec<ServiceDescription>,
-    pub receiver_ports: Vec<ServiceDescription>,
-    pub runnables: Vec<String>,
+    pub publisher_ports: Vec<ServiceDescription>,
+    pub subscriber_ports: Vec<ServiceDescription>,
+    pub nodes: Vec<String>,
 }
 
 pub struct ProcessList {
@@ -177,13 +177,13 @@ impl ProcessList {
 
             list.processes().into_iter().for_each(|process| {
                 if let Some(process_name) = process.name() {
-                    let details = self.map.entry(process_name).or_insert(ProcessDetails {
+                    let _details = self.map.entry(process_name).or_insert(ProcessDetails {
                         pid: process.pid(),
-                        sender_ports: Vec::new(),
-                        receiver_ports: Vec::new(),
-                        runnables: Vec::new(),
+                        publisher_ports: Vec::new(),
+                        subscriber_ports: Vec::new(),
+                        nodes: Vec::new(),
                     });
-                    // details.runnables.push(runnable);
+                    // details.nodes.push(node);
                 }
             });
 
@@ -240,8 +240,8 @@ impl ProcessList {
 }
 
 pub struct ServiceDetails {
-    pub sender_processes: Vec<String>,
-    pub receiver_processes: Vec<String>,
+    pub publisher_processes: Vec<String>,
+    pub subscriber_processes: Vec<String>,
 }
 
 pub struct ServiceList {
@@ -266,45 +266,45 @@ impl ServiceList {
         if let Some(ports) = self.sample_receiver.get_sample() {
             self.map.clear();
             for (_, process_details) in processes.map.iter_mut() {
-                process_details.sender_ports.clear();
-                process_details.receiver_ports.clear();
-                process_details.runnables.clear();
+                process_details.publisher_ports.clear();
+                process_details.subscriber_ports.clear();
+                process_details.nodes.clear();
             }
 
-            ports.publisher_ports().into_iter().for_each(|sender| {
-                if let Some(service_description) = sender.service_description() {
+            ports.publisher_ports().into_iter().for_each(|publisher| {
+                if let Some(service_description) = publisher.service_description() {
                     let details =
                         self.map
                             .entry(service_description.clone())
                             .or_insert(ServiceDetails {
-                                sender_processes: Vec::new(),
-                                receiver_processes: Vec::new(),
+                                publisher_processes: Vec::new(),
+                                subscriber_processes: Vec::new(),
                             });
-                    if let Some(process_name) = sender.process_name() {
+                    if let Some(process_name) = publisher.process_name() {
                         if let Some(process_details) = processes.map.get_mut(&process_name).as_mut()
                         {
-                            process_details.sender_ports.push(service_description);
+                            process_details.publisher_ports.push(service_description);
                         }
-                        details.sender_processes.push(process_name);
+                        details.publisher_processes.push(process_name);
                     }
                 }
             });
 
-            ports.subscriber_ports().into_iter().for_each(|receiver| {
-                if let Some(service_description) = receiver.service_description() {
+            ports.subscriber_ports().into_iter().for_each(|subscriber| {
+                if let Some(service_description) = subscriber.service_description() {
                     let details =
                         self.map
                             .entry(service_description.clone())
                             .or_insert(ServiceDetails {
-                                sender_processes: Vec::new(),
-                                receiver_processes: Vec::new(),
+                                publisher_processes: Vec::new(),
+                                subscriber_processes: Vec::new(),
                             });
-                    if let Some(process_name) = receiver.process_name() {
+                    if let Some(process_name) = subscriber.process_name() {
                         if let Some(process_details) = processes.map.get_mut(&process_name).as_mut()
                         {
-                            process_details.receiver_ports.push(service_description);
+                            process_details.subscriber_ports.push(service_description);
                         }
-                        details.receiver_processes.push(process_name);
+                        details.subscriber_processes.push(process_name);
                     }
                 }
             });

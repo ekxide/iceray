@@ -13,7 +13,8 @@ use crate::App;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Layout, Rect};
 use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, Paragraph, Tabs, Text};
+use tui::text::{Span, Spans};
+use tui::widgets::{Block, Borders, Paragraph, Tabs, Wrap};
 use tui::{Frame, Terminal};
 
 use std::io;
@@ -33,13 +34,12 @@ fn draw_tabbar<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    let tabs = Tabs::default()
+    let tabs = Tabs::new(app.tabs.titles.iter().cloned().map(Spans::from).collect())
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Introspection Topics"),
         )
-        .titles(&app.tabs.titles)
         .select(app.tabs.index)
         .style(Style::default())
         .highlight_style(Style::default().fg(Color::Yellow));
@@ -53,17 +53,17 @@ where
 {
     match app.tabs.index {
         0 => {
-            let text = [Text::raw(
-                "unimplemented!\n\nuse arraw keys to navigate to the next page".to_string(),
-            )];
-            let paragraph = Paragraph::new(text.iter())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Overview")
-                        .title_style(Style::default()),
-                )
-                .wrap(false);
+            let mut text = Vec::<Spans>::new();
+
+            text.push(Spans::from(vec![Span::raw("unimplemented!")]));
+            text.push(Spans::from(vec![Span::raw("")]));
+            text.push(Spans::from(vec![Span::raw(
+                "use arrow keys to navigate to the next page!",
+            )]));
+
+            let paragraph = Paragraph::new(text)
+                .block(Block::default().borders(Borders::ALL).title("Overview"))
+                .wrap(Wrap { trim: false });
 
             frame.render_widget(paragraph, area);
         }
