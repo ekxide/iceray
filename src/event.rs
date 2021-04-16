@@ -1,11 +1,4 @@
-// Copyright 2020 Mathias Kraus - All rights reserved
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE or
-// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be
-// copied, modified, or distributed except according to those terms.
-
-// TODO add mandatory MIT license notice
-// from https://github.com/fdehau/tui-rs/blob/master/examples/util/event.rs
+// SPDX-License-Identifier: Apache-2.0
 
 use std::io;
 use std::sync::mpsc;
