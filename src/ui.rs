@@ -23,7 +23,9 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(),
 
         draw_tabbar(&mut frame, chunks[0], app);
         draw_main_view(&mut frame, chunks[1], app);
-    })
+    })?;
+
+    Ok(())
 }
 
 fn draw_tabbar<B>(frame: &mut Frame<B>, area: Rect, app: &App)
