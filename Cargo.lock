@@ -140,7 +140,7 @@ dependencies = [
 [[package]]
 name = "iceoryx-rs"
 version = "0.0.10"
-source = "git+https://github.com/elBoberido/iceoryx-rs.git#1236c74aae15451aa5747034a34332b4cbf8885a"
+source = "git+https://github.com/eclipse-iceoryx/iceoryx-rs.git#1236c74aae15451aa5747034a34332b4cbf8885a"
 dependencies = [
  "cpp",
  "cpp_build",
