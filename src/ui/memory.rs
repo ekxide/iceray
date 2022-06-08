@@ -169,9 +169,21 @@ where
                     last = Some(*value);
                 });
             }
-            ctx.print(left, top, "100%", Color::White);
-            ctx.print(left, bottom + (top - bottom) / 2.0, "50%", Color::White);
-            ctx.print(left, bottom, "0%", Color::White);
+            ctx.print(
+                left,
+                top,
+                Span::styled("100%", Style::default().fg(Color::White)),
+            );
+            ctx.print(
+                left,
+                bottom + (top - bottom) / 2.0,
+                Span::styled("50%", Style::default().fg(Color::White)),
+            );
+            ctx.print(
+                left,
+                bottom,
+                Span::styled("0%", Style::default().fg(Color::White)),
+            );
         })
         .x_bounds([left, right])
         .y_bounds([bottom, top]);
