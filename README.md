@@ -1,4 +1,4 @@
-# iceray - introspection TUI for Eclipse iceoryx
+# iceray - Introspection TUI for Eclipse iceoryx
 
 [![Crates.io](https://img.shields.io/crates/v/iceray.svg)](https://crates.io/crates/iceray)
 
