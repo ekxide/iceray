@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iceoryx_rs::introspection::{
+    MemPoolIntrospection, PortIntrospection, ProcessIntrospection,
     MemPoolIntrospectionTopic, PortIntrospectionTopic, ProcessIntrospectionTopic,
     ServiceDescription,
 };
-use iceoryx_rs::sb::st::{Sample, SampleReceiver};
+use iceoryx_rs::st::{Sample, SampleReceiver};
 
 use termion::event::{Key, MouseEvent};
 
@@ -46,8 +47,8 @@ pub struct MemorySegments {
 
 impl MemorySegments {
     pub fn new() -> Self {
-        let topic = MemPoolIntrospectionTopic::new();
-        let (subscriber, sample_receive_token) = topic.subscribe();
+        let inactive_sub = MemPoolIntrospection::new().expect("Mempool introspection subscriber");
+        let (subscriber, sample_receive_token) = inactive_sub.subscribe();
 
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
@@ -156,8 +157,8 @@ pub struct ProcessList {
 
 impl ProcessList {
     pub fn new() -> Self {
-        let topic = ProcessIntrospectionTopic::new();
-        let (subscriber, sample_receive_token) = topic.subscribe();
+        let inactive_sub = ProcessIntrospection::new().expect("Process introspection subscriber");
+        let (subscriber, sample_receive_token) = inactive_sub.subscribe();
 
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),
@@ -248,8 +249,8 @@ pub struct ServiceList {
 
 impl ServiceList {
     pub fn new() -> Self {
-        let topic = PortIntrospectionTopic::new();
-        let (subscriber, sample_receive_token) = topic.subscribe();
+        let inactive_sub = PortIntrospection::new().expect("Port introspection subscriber");
+        let (subscriber, sample_receive_token) = inactive_sub.subscribe();
 
         Self {
             sample_receiver: subscriber.get_sample_receiver(sample_receive_token),

@@ -140,8 +140,19 @@ dependencies = [
 
 [[package]]
 name = "iceoryx-rs"
-version = "0.0.10"
-source = "git+https://github.com/eclipse-iceoryx/iceoryx-rs.git#b1c15756d5d8f0a054c9a3e323e1827e9b0c18af"
+version = "0.0.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b5b17a366bdba93fc69cd2fcaf13586fe44464c9b93ad4838e237c13ea29ba9"
+dependencies = [
+ "iceoryx-sys",
+ "thiserror",
+]
+
+[[package]]
+name = "iceoryx-sys"
+version = "0.0.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28ee2e7ffaf1b45f6185e785bf44156edaea7f2355703e1eff9379f34f0c8624"
 dependencies = [
  "cpp",
  "cpp_build",
@@ -150,7 +161,7 @@ dependencies = [
 
 [[package]]
 name = "iceray"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "iceoryx-rs",
  "structopt",
@@ -208,18 +219,18 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.39"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c54b25569025b7fc9651de43004ae593a75ad88543b17178aa5e1b9c4f15f56f"
+checksum = "dd96a1e8ed2596c337f8eae5f24924ec83f5ad5ab21ea8e455d3566c69fbcaf7"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.18"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1feb54ed693b93a84e14094943b84b7c4eae204c512b7ccb95ab0c66d278ad1"
+checksum = "3bcdf212e9776fbcb2d23ab029360416bb1706b1aea2d1a5ba002727cbcab804"
 dependencies = [
  "proc-macro2",
 ]
@@ -291,9 +302,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.96"
+version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0748dd251e24453cb8717f0354206b91557e4ec8703673a4b30208f2abaf1ebf"
+checksum = "c50aef8a904de4c23c788f104b7dddc7d6f79c647c7c8ce4cc8f73eb0ca773dd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -356,9 +367,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d22af068fba1eb5edcb4aea19d382b2a3deb4c8f9d475c589b6ada9e0fd493ee"
+checksum = "5bd2fe26506023ed7b5e1e315add59d6f584c621d037f9368fea9cfb988f368c"
 
 [[package]]
 name = "unicode-segmentation"
