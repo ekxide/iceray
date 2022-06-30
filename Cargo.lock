@@ -140,9 +140,9 @@ dependencies = [
 
 [[package]]
 name = "iceoryx-rs"
-version = "0.0.13"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b5b17a366bdba93fc69cd2fcaf13586fe44464c9b93ad4838e237c13ea29ba9"
+checksum = "0236c32fc3e283616bd78a6e4b9b5f4265bb8641245cfef4be701e98df1197ac"
 dependencies = [
  "iceoryx-sys",
  "thiserror",
@@ -150,9 +150,9 @@ dependencies = [
 
 [[package]]
 name = "iceoryx-sys"
-version = "0.0.13"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28ee2e7ffaf1b45f6185e785bf44156edaea7f2355703e1eff9379f34f0c8624"
+checksum = "982a35e19046d61aa909f46c2a7bf7d38c1549a745aedf9eca8a06cb0747a528"
 dependencies = [
  "cpp",
  "cpp_build",
@@ -161,7 +161,7 @@ dependencies = [
 
 [[package]]
 name = "iceray"
-version = "0.0.9"
+version = "0.1.0"
 dependencies = [
  "iceoryx-rs",
  "structopt",

@@ -59,7 +59,7 @@ impl MemorySegments {
     }
 
     pub fn update(&mut self) {
-        if let Some(sample) = self.sample_receiver.get_sample() {
+        if let Some(sample) = self.sample_receiver.take() {
             // update history
             sample
                 .memory_segments()
@@ -169,7 +169,7 @@ impl ProcessList {
     }
 
     pub fn update(&mut self) {
-        if let Some(list) = self.sample_receiver.get_sample() {
+        if let Some(list) = self.sample_receiver.take() {
             self.map.clear();
 
             list.processes().into_iter().for_each(|process| {
@@ -260,7 +260,7 @@ impl ServiceList {
     }
 
     pub fn update(&mut self, processes: &mut ProcessList) {
-        if let Some(ports) = self.sample_receiver.get_sample() {
+        if let Some(ports) = self.sample_receiver.take() {
             self.map.clear();
             for (_, process_details) in processes.map.iter_mut() {
                 process_details.publisher_ports.clear();
