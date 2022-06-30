@@ -1,9 +1,16 @@
 [package]
-name = "iceray"
-version = "0.0.8"
-authors = ["Mathias »Bob« Kraus <k.hias@gmx.de>"]
 edition = "2018"
+name = "iceray"
+version = "0.0.9"
+authors = ["elBoberido <k.hias@gmx.de>"]
+description = "Introspection TUI for Eclipse iceoryx written in Rust"
+readme = "README.md"
+keywords = [
+    "iceoryx",
+    "introspection"
+]
 license = "Apache-2.0"
+repository = "https://github.com/elBoberido/iceray"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
