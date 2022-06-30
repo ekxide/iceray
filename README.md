@@ -1,6 +1,6 @@
-# iceray - iceoryx introspection
+# iceray - introspection TUI for Eclipse iceoryx
 
-[![Crates.io](https://img.shields.io/crates/v/iceoryx-rs.svg)](https://crates.io/crates/iceoryx-rs)
+[![Crates.io](https://img.shields.io/crates/v/iceray.svg)](https://crates.io/crates/iceray)
 
 An introspection TUI for [Eclipse iceoryx](https://github.com/eclipse-iceoryx/iceoryx) based on [iceoryx-rs](https://crates.io/crates/iceoryx-rs).
 
