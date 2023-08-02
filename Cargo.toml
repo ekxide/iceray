@@ -2,7 +2,7 @@
 edition = "2018"
 name = "iceray"
 version = "0.1.0"
-authors = ["elBoberido <k.hias@gmx.de>"]
+authors = ["elBoberido <elboberido@m-hias.de>"]
 description = "Introspection TUI for Eclipse iceoryx written in Rust"
 readme = "README.md"
 keywords = [
@@ -16,6 +16,6 @@ repository = "https://github.com/elBoberido/iceray"
 
 [dependencies]
 iceoryx-rs = { version = "0.1.0" }
-termion = "1.5"
-tui = { version = "0.18", default-features = false, features = ["termion"] }
+termion = "2.0"
+ratatui = { version = "0.22", default-features = false, features = ["termion"] }
 structopt = "0.3"

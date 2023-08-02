@@ -6,12 +6,12 @@ mod service;
 
 use crate::App;
 
-use tui::backend::Backend;
-use tui::layout::{Constraint, Layout, Rect};
-use tui::style::{Color, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Paragraph, Tabs, Wrap};
-use tui::{Frame, Terminal};
+use ratatui::backend::Backend;
+use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::style::{Color, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, Paragraph, Tabs, Wrap};
+use ratatui::{Frame, Terminal};
 
 use std::io;
 
@@ -32,7 +32,7 @@ fn draw_tabbar<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    let tabs = Tabs::new(app.tabs.titles.iter().cloned().map(Spans::from).collect())
+    let tabs = Tabs::new(app.tabs.titles.iter().cloned().map(Line::from).collect())
         .block(
             Block::default()
                 .borders(Borders::ALL)
@@ -51,11 +51,11 @@ where
 {
     match app.tabs.index {
         0 => {
-            let mut text = Vec::<Spans>::new();
+            let mut text = Vec::<Line>::new();
 
-            text.push(Spans::from(vec![Span::raw("unimplemented!")]));
-            text.push(Spans::from(vec![Span::raw("")]));
-            text.push(Spans::from(vec![Span::raw(
+            text.push(Line::from(vec![Span::raw("unimplemented!")]));
+            text.push(Line::from(vec![Span::raw("")]));
+            text.push(Line::from(vec![Span::raw(
                 "use arrow keys to navigate to the next page!",
             )]));
 

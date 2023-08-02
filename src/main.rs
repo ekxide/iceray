@@ -16,10 +16,9 @@ use structopt::StructOpt;
 
 use termion::input::MouseTerminal;
 use termion::raw::IntoRawMode;
-use termion::screen::AlternateScreen;
 
-use tui::backend::TermionBackend;
-use tui::Terminal;
+use ratatui::backend::TermionBackend;
+use ratatui::Terminal;
 
 use std::io;
 use std::time::Duration;
@@ -38,7 +37,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
-    let stdout = AlternateScreen::from(stdout);
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
@@ -51,7 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         match events.next()? {
             Event::Input(key) => {
                 app.on_key(key);
-            },
+            }
             Event::Mouse(m) => {
                 app.on_mouse(m);
             }

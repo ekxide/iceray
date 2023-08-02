@@ -2,14 +2,14 @@
 
 use crate::app::{App, USED_CHUNKS_HISTORY_SIZE};
 
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Paragraph, Wrap};
-use tui::Frame;
+use ratatui::backend::Backend;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use ratatui::Frame;
 
-use tui::widgets::canvas::{Canvas, Line};
+use ratatui::widgets::canvas::{Canvas, Line as CanvasLine};
 
 pub fn draw<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
@@ -28,7 +28,7 @@ pub fn draw_mempool_segments<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    let mut text = Vec::<Spans>::new();
+    let mut text = Vec::<Line>::new();
 
     let sample = if let Some(sample) = app.memory.segments.as_ref() {
         sample
@@ -38,8 +38,8 @@ where
 
     (*sample).memory_segments().into_iter().for_each(|segment| {
         let segment_id = segment.segment_id();
-        text.push(Spans::from(vec![Span::raw("")]));
-        text.push(Spans::from(vec![
+        text.push(Line::from(vec![Span::raw("")]));
+        text.push(Line::from(vec![
             Span::styled(
                 format!("Segment {}", segment_id),
                 Style::default().add_modifier(Modifier::BOLD),
@@ -51,14 +51,14 @@ where
             )),
         ]));
 
-        text.push(Spans::from(vec![Span::raw("")]));
+        text.push(Line::from(vec![Span::raw("")]));
 
-        text.push(Spans::from(vec![Span::styled(
+        text.push(Line::from(vec![Span::styled(
             "  MemPool | Chunks In Use |    Total | Min Free | Chunk Size | Payload Size",
             Style::default().add_modifier(Modifier::BOLD),
         )]));
 
-        text.push(Spans::from(vec![Span::raw(
+        text.push(Line::from(vec![Span::raw(
             "  -------------------------------------------------------------------------",
         )]));
 
@@ -88,7 +88,7 @@ where
                     Style::default().fg(Color::Red)
                 };
 
-                text.push(Spans::from(vec![
+                text.push(Line::from(vec![
                     Span::styled(format!("  {:>7} | ", index,), style),
                     Span::styled(format!("{:>13}", mempool.used_chunks,), used_chunks_style),
                     Span::styled(
@@ -149,7 +149,7 @@ where
                 let mut last = None;
                 history.iter().for_each(|value| {
                     if let Some(last) = last {
-                        ctx.draw(&Line {
+                        ctx.draw(&CanvasLine {
                             x1: pos as f64,
                             y1: last,
                             x2: pos as f64,
@@ -158,7 +158,7 @@ where
                         });
                     }
                     let pos_next = pos + 1;
-                    ctx.draw(&Line {
+                    ctx.draw(&CanvasLine {
                         x1: pos as f64,
                         y1: *value,
                         x2: pos_next as f64,

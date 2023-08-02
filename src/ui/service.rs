@@ -2,12 +2,12 @@
 
 use crate::app::App;
 
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Paragraph, Wrap};
-use tui::Frame;
+use ratatui::backend::Backend;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use ratatui::Frame;
 
 pub fn draw<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
@@ -26,9 +26,9 @@ pub fn draw_service_list<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    let mut text = Vec::<Spans>::new();
+    let mut text = Vec::<Line>::new();
 
-    text.push(Spans::from(vec![Span::raw("")]));
+    text.push(Line::from(vec![Span::raw("")]));
 
     for (index, (service, _)) in app.services.map.iter().enumerate() {
         let style = if app.services.selection.0 == index {
@@ -36,7 +36,7 @@ where
         } else {
             Style::default()
         };
-        text.push(Spans::from(vec![Span::styled(
+        text.push(Line::from(vec![Span::styled(
             format!(
                 "{} • {} • {}",
                 (*service).service_id,
@@ -58,12 +58,12 @@ pub fn draw_service_details<B>(frame: &mut Frame<B>, area: Rect, app: &App)
 where
     B: Backend,
 {
-    let mut text = Vec::<Spans>::new();
+    let mut text = Vec::<Line>::new();
 
-    text.push(Spans::from(vec![Span::raw("")]));
+    text.push(Line::from(vec![Span::raw("")]));
 
     if let Some(details) = app.services.map.get(&app.services.selection.1) {
-        text.push(Spans::from(vec![
+        text.push(Line::from(vec![
             Span::styled("Name: ", Style::default().add_modifier(Modifier::BOLD)),
             Span::raw(format!(
                 "{} • {} • {}",
@@ -73,7 +73,7 @@ where
             )),
         ]));
 
-        text.push(Spans::from(vec![
+        text.push(Line::from(vec![
             Span::styled(
                 format!("Processes with corresponding Publisher Ports: "),
                 Style::default().add_modifier(Modifier::BOLD),
@@ -82,10 +82,10 @@ where
         ]));
 
         for process in details.publisher_processes.iter() {
-            text.push(Spans::from(vec![Span::raw(format!(" • {}", process))]));
+            text.push(Line::from(vec![Span::raw(format!(" • {}", process))]));
         }
 
-        text.push(Spans::from(vec![
+        text.push(Line::from(vec![
             Span::styled(
                 format!("Processes with corresponding Subscriber Ports: ",),
                 Style::default().add_modifier(Modifier::BOLD),
@@ -94,7 +94,7 @@ where
         ]));
 
         for process in details.subscriber_processes.iter() {
-            text.push(Spans::from(vec![Span::raw(format!(" • {}", process))]));
+            text.push(Line::from(vec![Span::raw(format!(" • {}", process))]));
         }
     }
 

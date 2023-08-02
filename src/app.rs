@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iceoryx_rs::introspection::{
-    MemPoolIntrospection, PortIntrospection, ProcessIntrospection,
-    MemPoolIntrospectionTopic, PortIntrospectionTopic, ProcessIntrospectionTopic,
-    ServiceDescription,
+    MemPoolIntrospection, MemPoolIntrospectionTopic, PortIntrospection, PortIntrospectionTopic,
+    ProcessIntrospection, ProcessIntrospectionTopic, ServiceDescription,
 };
 use iceoryx_rs::st::{Sample, SampleReceiver};
 
