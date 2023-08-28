@@ -17,5 +17,5 @@ repository = "https://github.com/elBoberido/iceray"
 [dependencies]
 iceoryx-rs = { version = "0.1.0" }
 termion = "2.0"
-ratatui = { version = "0.22", default-features = false, features = ["termion"] }
+ratatui = { version = "0.23", default-features = false, features = ["termion"] }
 structopt = "0.3"
