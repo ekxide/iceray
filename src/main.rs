@@ -16,6 +16,7 @@ use structopt::StructOpt;
 
 use termion::input::MouseTerminal;
 use termion::raw::IntoRawMode;
+use termion::screen::IntoAlternateScreen;
 
 use ratatui::backend::TermionBackend;
 use ratatui::Terminal;
@@ -37,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
-    let backend = TermionBackend::new(stdout);
+    let backend = TermionBackend::new(stdout.into_alternate_screen()?);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
 
